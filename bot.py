@@ -175,7 +175,7 @@ def save_films(films_data):
 
 # --- Commandes du bot ---
 
-@tree.command(name="addmovie", description="Ajoute un film à la liste avec un ou plusieurs genres.")
+@tree.command(name="add", description="Ajoute un film à la liste avec un ou plusieurs genres.")
 @app_commands.describe(
     nom_film="Le nom du film à ajouter.",
     lien_film="Le lien du film (YouTube, etc.).",
@@ -229,7 +229,7 @@ async def addmovie_command(
 
 
 # --- Commande /removemovie ---
-@tree.command(name="removemovie", description="Supprime un film de la liste.")
+@tree.command(name="remove", description="Supprime un film de la liste.")
 @app_commands.describe(nom_film="Le nom du film à supprimer.")
 @app_commands.autocomplete(nom_film=removemovie_autocomplete) # Ici, removemovie_autocomplete est définie
 @app_commands.default_permissions(manage_guild=True)
@@ -261,7 +261,7 @@ async def removemovie_command(interaction: discord.Interaction, nom_film: str):
 
 
 # --- Commande /infomovie ---
-@tree.command(name="infomovie", description="Affiche les informations détaillées d'un film.")
+@tree.command(name="info", description="Affiche les informations détaillées d'un film.")
 @app_commands.describe(nom_film="Le nom du film dont vous voulez les informations.")
 @app_commands.autocomplete(nom_film=infomovie_autocomplete) # Ici, infomovie_autocomplete est définie
 async def infomovie_command(interaction: discord.Interaction, nom_film: str):
@@ -299,7 +299,7 @@ async def infomovie_command(interaction: discord.Interaction, nom_film: str):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-@tree.command(name="listmovie", description="Affiche tous les films enregistrés.")
+@tree.command(name="list", description="Affiche tous les films enregistrés.")
 async def listmovie_command(interaction: discord.Interaction):
     """Commande pour afficher tous les films."""
     films = load_films()
@@ -331,7 +331,7 @@ async def listmovie_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-@tree.command(name="statsmovies", description="Affiche les statistiques sur les films enregistrés.")
+@tree.command(name="stats", description="Affiche les statistiques sur les films enregistrés.")
 async def statsmovies_command(interaction: discord.Interaction):
     """Commande pour afficher le nombre de films et leur répartition par genre."""
     films = load_films()
@@ -373,7 +373,7 @@ async def statsmovies_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-@tree.command(name="randommovie", description="Affiche un film aléatoire de la liste en fonction des genres.")
+@tree.command(name="random", description="Affiche un film aléatoire de la liste en fonction des genres.")
 @app_commands.describe(
     genres="Un ou plusieurs genres séparés par des virgules (ex: 'Action, Comédie'). Laissez vide pour tous les genres."
 )
@@ -440,7 +440,7 @@ async def randommovie_command(interaction: discord.Interaction, genres: str = No
 
 
 # --- COMMANDE : /editmovie ---
-@tree.command(name="editmovie", description="Modifie un film existant.")
+@tree.command(name="edit", description="Modifie un film existant.")
 @app_commands.describe(
     nom_film="Le nom du film à modifier.",
     nouveau_nom="Le nouveau nom du film (optionnel).",
