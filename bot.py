@@ -59,7 +59,7 @@ async def removemovie_autocomplete(
     ]
     return matching_films[:25]
 
-async def movieinfo_autocomplete(
+async def infomovie_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -260,11 +260,11 @@ async def removemovie_command(interaction: discord.Interaction, nom_film: str):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-# --- Commande /movieinfo ---
-@tree.command(name="movieinfo", description="Affiche les informations détaillées d'un film.")
+# --- Commande /infomovie ---
+@tree.command(name="infomovie", description="Affiche les informations détaillées d'un film.")
 @app_commands.describe(nom_film="Le nom du film dont vous voulez les informations.")
-@app_commands.autocomplete(nom_film=movieinfo_autocomplete) # Ici, movieinfo_autocomplete est définie
-async def movieinfo_command(interaction: discord.Interaction, nom_film: str):
+@app_commands.autocomplete(nom_film=infomovie_autocomplete) # Ici, infomovie_autocomplete est définie
+async def infomovie_command(interaction: discord.Interaction, nom_film: str):
     """Commande pour afficher les informations d'un film."""
     films = load_films()
     film_data = None
