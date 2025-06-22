@@ -138,7 +138,7 @@ async def on_ready():
     except Exception as e:
         print(f"Erreur lors de la synchronisation des commandes : {e}")
 
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="les films en stock"))
+    await client.change_presence(status=discord.Status.idle)
     print("Statut du bot défini.")
 
 # --- Fonctions utilitaires pour la gestion des films ---
