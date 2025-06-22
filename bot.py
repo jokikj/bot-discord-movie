@@ -345,13 +345,13 @@ async def list_command(interaction: discord.Interaction, genre: str = None):
                 if display_genre in film_genres:
                     lien = film_info.get("lien", "N/A")
                     genres_display = ", ".join(film_genres)
-                    description = film_info.get("description", "Aucune description.")
+                    # description = film_info.get("description", "Aucune description.") # Ligne supprimée
 
                     entry = f"**{nom}** ({genres_display})"
                     if lien != "N/A":
                         entry += f" : [Lien]({lien})"
-                    if description != "Aucune description.":
-                        entry += f" - Description: {description}"
+                    # if description != "Aucune description.": # Ligne supprimée
+                    #     entry += f" - Description: {description}" # Ligne supprimée
                     film_entries.append(entry)
                     filtered_films_count += 1
             
@@ -379,13 +379,13 @@ async def list_command(interaction: discord.Interaction, genre: str = None):
         for nom, film_info in films.items():
             lien = film_info.get("lien", "N/A")
             genres_display = ", ".join(film_info.get("genre", ["Non spécifié"]))
-            description = film_info.get("description", "Aucune description.")
+            # description = film_info.get("description", "Aucune description.") # Ligne supprimée
 
             entry = f"**{nom}** ({genres_display})"
             if lien != "N/A":
                 entry += f" : [Lien]({lien})"
-            if description != "Aucune description.":
-                entry += f" - Description: {description}"
+            # if description != "Aucune description.": # Ligne supprimée
+            #     entry += f" - Description: {description}" # Ligne supprimée
             film_entries.append(entry)
         
         filtered_films_count = len(films)
@@ -519,22 +519,22 @@ async def random_command(interaction: discord.Interaction, genres: str = None):
 
 @tree.command(name="edit", description="Modifie un film existant.")
 @app_commands.describe(
-    film_a_modifier="Le nom du film à modifier.", # Renommé pour plus de clarté
-    nom="Le nouveau nom du film (optionnel).", # Renommé
-    lien="Le nouveau lien du film (optionnel).", # Renommé
-    genres="Un ou plusieurs nouveaux genres séparés par des virgules (optionnel).", # Renommé
-    description="La nouvelle description du film (optionnel)." # Renommé
+    film_a_modifier="Le nom du film à modifier.",
+    nom="Le nouveau nom du film (optionnel).",
+    lien="Le nouveau lien du film (optionnel).",
+    genres="Un ou plusieurs nouveaux genres séparés par des virgules (optionnel).",
+    description="La nouvelle description du film (optionnel)."
 )
-@app_commands.autocomplete(film_a_modifier=edit_autocomplete_film_name) # Mise à jour de l'autocomplete
-@app_commands.autocomplete(genres=edit_autocomplete_genres) # Mise à jour de l'autocomplete
+@app_commands.autocomplete(film_a_modifier=edit_autocomplete_film_name)
+@app_commands.autocomplete(genres=edit_autocomplete_genres)
 @app_commands.default_permissions(manage_guild=True)
 async def edit_command(
     interaction: discord.Interaction,
-    film_a_modifier: str, # Nouveau nom de paramètre
-    nom: str = None, # Nouveau nom de paramètre
-    lien: str = None, # Nouveau nom de paramètre
-    genres: str = None, # Nouveau nom de paramètre
-    description: str = None # Nouveau nom de paramètre
+    film_a_modifier: str,
+    nom: str = None,
+    lien: str = None,
+    genres: str = None,
+    description: str = None
 ):
     """Commande pour modifier un film."""
     films = load_films()
@@ -542,7 +542,7 @@ async def edit_command(
     film_data = None
 
     for name, data in films.items():
-        if name.lower() == film_a_modifier.lower(): # Utiliser le nouveau nom de paramètre
+        if name.lower() == film_a_modifier.lower():
             film_data = data
             original_film_name = name
             break
@@ -560,10 +560,7 @@ async def edit_command(
     new_film_name = original_film_name
     updated_film_data = film_data.copy()
 
-    # Vérifiez si 'nom' est différent de original_film_name (sensible à la casse)
     if nom and nom != original_film_name: 
-        # Vérifiez si le nouveau nom (insensible à la casse) est déjà utilisé par un autre film existant
-        # en excluant le film que nous sommes en train de modifier.
         if nom.lower() in {k.lower() for k in films.keys() if k.lower() != original_film_name.lower()}:
             embed = discord.Embed(
                 title="Erreur de modification",
@@ -575,7 +572,6 @@ async def edit_command(
 
         new_film_name = nom
         changes_made.append(f"Nom : `{original_film_name}` -> `{new_film_name}`")
-        # Supprimez l'ancienne entrée si le nom a changé (même si c'est juste la casse)
         if original_film_name != new_film_name: 
             del films[original_film_name]
 
@@ -597,7 +593,6 @@ async def edit_command(
         if not parsed_new_genres:
             parsed_new_genres = ["Non spécifié"]
 
-        # Utilisez sorted pour comparer les listes de genres indépendamment de l'ordre
         if sorted(parsed_new_genres) != sorted(updated_film_data.get("genre", [])):
             changes_made.append(f"Genre(s) : `{', '.join(film_data.get('genre', ['Non spécifié']))}` -> `{', '.join(parsed_new_genres)}`")
             updated_film_data["genre"] = parsed_new_genres
