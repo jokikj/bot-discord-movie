@@ -28,9 +28,9 @@ intents.members = True
 client = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(client)
 
-# --- Fonctions d'autocomplétion (déplacées ici pour être définies avant d'être utilisées) ---
+# --- Fonctions d'autocomplétion ---
 
-async def addmovie_autocomplete_genres(
+async def add_autocomplete_genres(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -47,7 +47,7 @@ async def addmovie_autocomplete_genres(
             suggestions.append(app_commands.Choice(name=suggested_value, value=suggested_value))
     return suggestions[:25]
 
-async def removemovie_autocomplete(
+async def remove_autocomplete_film_name(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -59,7 +59,7 @@ async def removemovie_autocomplete(
     ]
     return matching_films[:25]
 
-async def infomovie_autocomplete(
+async def info_autocomplete_film_name(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -88,7 +88,7 @@ async def random_autocomplete_genres(
             suggestions.append(app_commands.Choice(name=suggested_value, value=suggested_value))
     return suggestions[:25]
 
-async def listmovie_autocomplete_genres(
+async def list_autocomplete_genres(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -185,17 +185,17 @@ def save_films(films_data):
 @tree.command(name="add", description="Ajoute un film à la liste avec un ou plusieurs genres.")
 @app_commands.describe(
     nom_film="Le nom du film à ajouter.",
-    lien_film="Le lien du film (YouTube, etc.).",
-    genres_str="Un ou plusieurs genres séparés par des virgules (ex: 'Action, Comédie').",
+    lien_film="Le lien du film (YouTube, etc.) (optionnel).",
+    genres_str="Un ou plusieurs genres séparés par des virgules (ex: 'Action, Comédie') (optionnel).",
     description="Une courte description du film (optionnel)."
 )
-@app_commands.autocomplete(genres_str=addmovie_autocomplete_genres)
+@app_commands.autocomplete(genres_str=add_autocomplete_genres)
 @app_commands.default_permissions(manage_guild=True)
 async def add_command(
     interaction: discord.Interaction,
     nom_film: str,
-    lien_film: str,
-    genres_str: str,
+    lien_film: str = "N/A", 
+    genres_str: str = "", 
     description: str = "Aucune description."
 ):
     """Commande pour ajouter un film."""
@@ -210,13 +210,17 @@ async def add_command(
         return
 
     parsed_genres = []
-    for g_raw in [s.strip() for s in genres_str.split(',')]:
-        if g_raw:
-            found_genre = next((item for item in GENRES if item.lower() == g_raw.lower()), None)
-            if found_genre:
-                parsed_genres.append(found_genre)
-            else:
-                await interaction.followup.send(f"Attention : Le genre '{g_raw}' n'est pas reconnu et ne sera pas ajouté.", ephemeral=True)
+    if genres_str:
+        for g_raw in [s.strip() for s in genres_str.split(',')]:
+            if g_raw:
+                found_genre = next((item for item in GENRES if item.lower() == g_raw.lower()), None)
+                if found_genre:
+                    parsed_genres.append(found_genre)
+                else:
+                    # Utilisez followup.send pour les messages additionnels APRES la première réponse
+                    # Nous ne pouvons pas envoyer de followup ici avant la réponse initiale.
+                    # Pour gérer les genres non reconnus, nous les ignorerons silencieusement ou avertirons plus tard.
+                    pass # Nous allons ignorer les genres non reconnus ici pour éviter l'erreur
     
     if not parsed_genres:
         parsed_genres = ["Non spécifié"]
@@ -229,15 +233,18 @@ async def add_command(
         description=f"Le film **{nom_film}** ({', '.join(parsed_genres)}) a bien été ajouté à la liste.",
         color=discord.Color.green()
     )
-    embed.add_field(name="Lien", value=lien_film, inline=False)
+    if lien_film != "N/A":
+        embed.add_field(name="Lien", value=lien_film, inline=False)
     if description != "Aucune description.":
         embed.add_field(name="Description", value=description, inline=False)
+    
+    # La seule réponse initiale
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 @tree.command(name="remove", description="Supprime un film de la liste.")
 @app_commands.describe(nom_film="Le nom du film à supprimer.")
-@app_commands.autocomplete(nom_film=removemovie_autocomplete)
+@app_commands.autocomplete(nom_film=remove_autocomplete_film_name)
 @app_commands.default_permissions(manage_guild=True)
 async def remove_command(interaction: discord.Interaction, nom_film: str):
     """Commande pour supprimer un film."""
@@ -268,7 +275,7 @@ async def remove_command(interaction: discord.Interaction, nom_film: str):
 
 @tree.command(name="info", description="Affiche les informations détaillées d'un film.")
 @app_commands.describe(nom_film="Le nom du film dont vous voulez les informations.")
-@app_commands.autocomplete(nom_film=infomovie_autocomplete)
+@app_commands.autocomplete(nom_film=info_autocomplete_film_name)
 async def info_command(interaction: discord.Interaction, nom_film: str):
     """Commande pour afficher les informations d'un film."""
     films = load_films()
@@ -291,7 +298,8 @@ async def info_command(interaction: discord.Interaction, nom_film: str):
             color=discord.Color.gold()
         )
         embed.add_field(name="Genre(s)", value=", ".join(genres), inline=True)
-        embed.add_field(name="Lien", value=f"[Cliquer ici]({lien})", inline=True)
+        if lien != "N/A":
+            embed.add_field(name="Lien", value=f"[Cliquer ici]({lien})", inline=True)
         embed.add_field(name="Description", value=description, inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -308,23 +316,21 @@ async def info_command(interaction: discord.Interaction, nom_film: str):
 @app_commands.describe(
     genre="Filtrez les films par un genre spécifique. Laissez vide pour afficher tous les films."
 )
-@app_commands.autocomplete(genre=listmovie_autocomplete_genres)
+@app_commands.autocomplete(genre=list_autocomplete_genres)
 async def list_command(interaction: discord.Interaction, genre: str = None):
     """Commande pour afficher tous les films ou filtrer par genre."""
     films = load_films()
+    
+    # Prépare l'embed de réponse en fonction des conditions
+    embed = None
+    
     if not films:
         embed = discord.Embed(
             title="Liste de films vide",
             description="Il n'y a aucun film enregistré pour le moment.",
             color=discord.Color.blue()
         )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    filtered_films_count = 0
-    film_entries = []
-    
-    if genre:
+    elif genre:
         found_genre = next((g for g in GENRES if g.lower() == genre.lower()), None)
         if not found_genre:
             embed = discord.Embed(
@@ -332,54 +338,71 @@ async def list_command(interaction: discord.Interaction, genre: str = None):
                 description=f"Le genre **{genre}** n'est pas reconnu. Veuillez choisir parmi les suggestions.",
                 color=discord.Color.orange()
             )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-        
-        display_genre = found_genre
-        for nom, film_info in films.items():
-            film_genres = film_info.get("genre", ["Non spécifié"])
-            if not isinstance(film_genres, list):
-                film_genres = [film_genres]
+        else:
+            display_genre = found_genre
+            film_entries = []
+            filtered_films_count = 0
+            for nom, film_info in films.items():
+                film_genres = film_info.get("genre", ["Non spécifié"])
+                if not isinstance(film_genres, list):
+                    film_genres = [film_genres]
 
-            if display_genre in film_genres:
-                lien = film_info.get("lien", "N/A")
-                genres_display = ", ".join(film_genres)
-                film_entries.append(f"**{nom}** ({genres_display}) : [Lien]({lien})")
-                filtered_films_count += 1
-        
-        if not film_entries:
-            embed = discord.Embed(
-                title="Aucun film trouvé",
-                description=f"Aucun film trouvé pour le genre : **{display_genre}**.",
-                color=discord.Color.orange()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-        
-        title_description = f"Liste des films pour le genre : {display_genre}"
-        footer_text = f"Total: {filtered_films_count} film(s) dans ce genre."
+                if display_genre in film_genres:
+                    lien = film_info.get("lien", "N/A")
+                    genres_display = ", ".join(film_genres)
+                    if lien != "N/A":
+                        film_entries.append(f"**{nom}** ({genres_display}) : [Lien]({lien})")
+                    else:
+                        film_entries.append(f"**{nom}** ({genres_display})")
+                    filtered_films_count += 1
+            
+            if not film_entries:
+                embed = discord.Embed(
+                    title="Aucun film trouvé",
+                    description=f"Aucun film trouvé pour le genre : **{display_genre}**.",
+                    color=discord.Color.orange()
+                )
+            else:
+                title_description = f"Liste des films pour le genre : {display_genre}"
+                footer_text = f"Total: {filtered_films_count} film(s) dans ce genre."
+                description_content = "\n".join(film_entries)
 
-    else: # Si aucun genre n'est fourni, affiche tous les films
+                embed = discord.Embed(
+                    title=title_description,
+                    description=description_content,
+                    color=discord.Color.blue()
+                )
+                if filtered_films_count > 5: 
+                    embed.set_footer(text=footer_text)
+
+    else: # Aucun genre n'est fourni, affiche tous les films
+        film_entries = []
         for nom, film_info in films.items():
             lien = film_info.get("lien", "N/A")
             genres_display = ", ".join(film_info.get("genre", ["Non spécifié"]))
-            film_entries.append(f"**{nom}** ({genres_display}) : [Lien]({lien})")
+            if lien != "N/A":
+                film_entries.append(f"**{nom}** ({genres_display}) : [Lien]({lien})")
+            else:
+                film_entries.append(f"**{nom}** ({genres_display})")
         
         filtered_films_count = len(films)
         title_description = "Liste de tous les films"
         footer_text = f"Total: {filtered_films_count} films enregistrés."
+        description_content = "\n".join(film_entries)
 
-    description = "\n".join(film_entries)
-
-    embed = discord.Embed(
-        title=title_description,
-        description=description,
-        color=discord.Color.blue()
-    )
-    if filtered_films_count > 5: 
-        embed.set_footer(text=footer_text)
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+        embed = discord.Embed(
+            title=title_description,
+            description=description_content,
+            color=discord.Color.blue()
+        )
+        if filtered_films_count > 5: 
+            embed.set_footer(text=footer_text)
+    
+    # Envoie la seule et unique réponse
+    if embed: # S'assure qu'un embed a bien été créé
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    else: # Au cas où aucun embed n'aurait été créé pour une raison inattendue
+        await interaction.response.send_message("Une erreur inattendue est survenue.", ephemeral=True)
 
 
 @tree.command(name="stats", description="Affiche les statistiques sur les films enregistrés.")
@@ -449,7 +472,9 @@ async def random_command(interaction: discord.Interaction, genres: str = None):
                 if found_genre:
                     requested_genres.append(found_genre)
                 else:
-                    await interaction.followup.send(f"Le genre '{g_raw}' n'est pas reconnu et sera ignoré.", ephemeral=True)
+                    # Ici, si vous voulez un avertissement, il faudrait d'abord defer la réponse
+                    # ou inclure l'avertissement dans le message final.
+                    pass 
 
     if not requested_genres:
         selected_genre_display = "Tous les genres"
@@ -484,9 +509,11 @@ async def random_command(interaction: discord.Interaction, genres: str = None):
 
     embed = discord.Embed(
         title="Votre film aléatoire est :",
-        description=f"**{nom_film}** ({film_genres_display})\n[Regarder le film]({lien_film})",
+        description=f"**{nom_film}** ({film_genres_display})",
         color=discord.Color.purple()
     )
+    if lien_film != "N/A":
+        embed.add_field(name="Lien", value=f"[Regarder le film]({lien_film})", inline=False)
     if film_description != "Aucune description.":
         embed.add_field(name="Description", value=film_description, inline=False)
 
@@ -563,7 +590,8 @@ async def edit_command(
                     if found_genre:
                         parsed_new_genres.append(found_genre)
                     else:
-                        await interaction.followup.send(f"Attention : Le genre '{g_raw}' n'est pas reconnu et ne sera pas ajouté.", ephemeral=True)
+                        # Comme pour /add, on gère les messages d'avertissement séparément
+                        pass
         
         if not parsed_new_genres:
             parsed_new_genres = ["Non spécifié"]
