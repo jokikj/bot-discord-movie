@@ -71,7 +71,7 @@ async def infomovie_autocomplete(
     ]
     return matching_films[:25]
 
-async def randommovie_autocomplete_genres(
+async def random_autocomplete_genres(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -98,7 +98,7 @@ async def listmovie_autocomplete_genres(
             suggestions.append(app_commands.Choice(name=g, value=g))
     return suggestions[:25]
 
-async def editmovie_autocomplete_film_name(
+async def edit_autocomplete_film_name(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -110,7 +110,7 @@ async def editmovie_autocomplete_film_name(
     ]
     return matching_films[:25]
 
-async def editmovie_autocomplete_genres(
+async def edit_autocomplete_genres(
     interaction: discord.Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
@@ -191,7 +191,7 @@ def save_films(films_data):
 )
 @app_commands.autocomplete(genres_str=addmovie_autocomplete_genres)
 @app_commands.default_permissions(manage_guild=True)
-async def addmovie_command(
+async def add_command(
     interaction: discord.Interaction,
     nom_film: str,
     lien_film: str,
@@ -239,7 +239,7 @@ async def addmovie_command(
 @app_commands.describe(nom_film="Le nom du film à supprimer.")
 @app_commands.autocomplete(nom_film=removemovie_autocomplete)
 @app_commands.default_permissions(manage_guild=True)
-async def removemovie_command(interaction: discord.Interaction, nom_film: str):
+async def remove_command(interaction: discord.Interaction, nom_film: str):
     """Commande pour supprimer un film."""
     films = load_films()
     found_film_name = None
@@ -269,7 +269,7 @@ async def removemovie_command(interaction: discord.Interaction, nom_film: str):
 @tree.command(name="info", description="Affiche les informations détaillées d'un film.")
 @app_commands.describe(nom_film="Le nom du film dont vous voulez les informations.")
 @app_commands.autocomplete(nom_film=infomovie_autocomplete)
-async def infomovie_command(interaction: discord.Interaction, nom_film: str):
+async def info_command(interaction: discord.Interaction, nom_film: str):
     """Commande pour afficher les informations d'un film."""
     films = load_films()
     film_data = None
@@ -309,7 +309,7 @@ async def infomovie_command(interaction: discord.Interaction, nom_film: str):
     genre="Filtrez les films par un genre spécifique. Laissez vide pour afficher tous les films."
 )
 @app_commands.autocomplete(genre=listmovie_autocomplete_genres)
-async def listmovie_command(interaction: discord.Interaction, genre: str = None):
+async def list_command(interaction: discord.Interaction, genre: str = None):
     """Commande pour afficher tous les films ou filtrer par genre."""
     films = load_films()
     if not films:
@@ -383,7 +383,7 @@ async def listmovie_command(interaction: discord.Interaction, genre: str = None)
 
 
 @tree.command(name="stats", description="Affiche les statistiques sur les films enregistrés.")
-async def statsmovies_command(interaction: discord.Interaction):
+async def stats_command(interaction: discord.Interaction):
     """Commande pour afficher le nombre de films et leur répartition par genre."""
     films = load_films()
     total_films = len(films)
@@ -428,8 +428,8 @@ async def statsmovies_command(interaction: discord.Interaction):
 @app_commands.describe(
     genres="Un ou plusieurs genres séparés par des virgules (ex: 'Action, Comédie'). Laissez vide pour tous les genres."
 )
-@app_commands.autocomplete(genres=randommovie_autocomplete_genres)
-async def randommovie_command(interaction: discord.Interaction, genres: str = None):
+@app_commands.autocomplete(genres=random_autocomplete_genres)
+async def random_command(interaction: discord.Interaction, genres: str = None):
     """Commande pour afficher un film aléatoire, filtré par un ou plusieurs genres."""
     films = load_films()
     if not films:
@@ -501,10 +501,10 @@ async def randommovie_command(interaction: discord.Interaction, genres: str = No
     nouveaux_genres="Un ou plusieurs nouveaux genres séparés par des virgules (optionnel).",
     nouvelle_description="La nouvelle description du film (optionnel)."
 )
-@app_commands.autocomplete(nom_film=editmovie_autocomplete_film_name)
-@app_commands.autocomplete(nouveaux_genres=editmovie_autocomplete_genres)
+@app_commands.autocomplete(nom_film=edit_autocomplete_film_name)
+@app_commands.autocomplete(nouveaux_genres=edit_autocomplete_genres)
 @app_commands.default_permissions(manage_guild=True)
-async def editmovie_command(
+async def edit_command(
     interaction: discord.Interaction,
     nom_film: str,
     nouveau_nom: str = None,
