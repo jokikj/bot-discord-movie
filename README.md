@@ -34,7 +34,7 @@ Suivez ces étapes pour configurer et exécuter le bot sur votre machine.
 
 1.  **Clonez le dépôt :**
     ```bash
-    git clone [https://github.com/jokikj/bot-discord-movie.git](https://github.com/jokikj/bot-discord-movie.git)
+    git clone https://github.com/jokikj/bot-discord-movie.git
     cd bot-discord-movie
     ```
 
